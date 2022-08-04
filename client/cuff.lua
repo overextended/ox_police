@@ -85,6 +85,8 @@ local function whileCuffed()
         DisableControlAction(0, 140, true)
         Wait(0)
     end
+
+    ClearPedTasks(cache.ped)
 end
 
 AddStateBagChangeHandler('isCuffed', ('player:%s'):format(cache.serverId), function(_, _, value)
