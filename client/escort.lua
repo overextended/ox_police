@@ -13,6 +13,9 @@ RegisterCommand('escort', function()
     escortPlayer(id, ped)
 end)
 
+local IsPedCuffed = IsPedCuffed
+local IsEntityAttachedToEntity = IsEntityAttachedToEntity
+
 exports.qtarget:Player({
     options = {
         {
@@ -20,7 +23,18 @@ exports.qtarget:Player({
             label = "Escort",
             job = Config.PoliceGroups,
             canInteract = function(entity)
-                return InService and IsPedCuffed(entity) and not playerState.invBusy
+                return InService and IsPedCuffed(entity) and not IsEntityAttachedToEntity(entity, cache.ped) and not playerState.invBusy
+            end,
+            action = function(entity)
+                escortPlayer(NetworkGetPlayerIndexFromPed(entity), entity)
+            end
+        },
+        {
+            icon = "fas fa-hands-bound",
+            label = "Release",
+            job = Config.PoliceGroups,
+            canInteract = function(entity)
+                return InService and IsPedCuffed(entity) and IsEntityAttachedToEntity(entity, cache.ped) and not playerState.invBusy
             end,
             action = function(entity)
                 escortPlayer(NetworkGetPlayerIndexFromPed(entity), entity)
