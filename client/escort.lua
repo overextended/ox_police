@@ -43,8 +43,7 @@ local function whileEscorted(serverId)
         end
 
         if not IsEntityAttachedToEntity(cache.ped, ped) then
-            AttachEntityToEntity(cache.ped, ped, 11816, 0.54, 0.54, 0.0, 0.0, 0.0, 0.0, false, false, false, false, 2,
-                true)
+            AttachEntityToEntity(cache.ped, ped, 11816, 0.54, 0.54, 0.0, 0.0, 0.0, 0.0, false, false, true, true, 2, true)
         end
 
         Wait(500)
@@ -56,7 +55,7 @@ AddStateBagChangeHandler('isEscorted', ('player:%s'):format(cache.serverId), fun
         DetachEntity(cache.ped, true, false)
     end
 
-    if value then
+    if value and not isEscorted then
         CreateThread(function()
             whileEscorted(value)
         end)
@@ -66,4 +65,3 @@ AddStateBagChangeHandler('isEscorted', ('player:%s'):format(cache.serverId), fun
 end)
 
 playerState.isEscorted = isEscorted
-
