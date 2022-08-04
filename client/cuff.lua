@@ -28,6 +28,9 @@ local function cuffPlayer(ped)
     playerState.invBusy = false
 end
 
+local IsPedCuffed = IsPedCuffed
+local IsEntityAttached = IsEntityAttached
+
 RegisterCommand('cuff', function()
     if not InService or playerState.invBusy then return end
 
@@ -55,7 +58,7 @@ exports.qtarget:Player({
             label = "Remove handcuffs",
             job = Config.PoliceGroups,
             canInteract = function(entity)
-                return InService and IsPedCuffed(entity) and not playerState.invBusy
+                return InService and IsPedCuffed(entity) and not IsEntityAttached(entity) and not playerState.invBusy
             end,
             action = function(entity)
                 cuffPlayer(entity)
