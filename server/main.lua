@@ -113,12 +113,21 @@ lib.callback.register('ox_police:spawnVehicle', function(source, model, mock)
 
     local plate = GetVehicleNumberPlateText(vehicle)
     vehicles[player.charid] = {
-        vehicle = vehicle,
-        plate = plate,
+        vehicle = tostring(vehicle),
+        plate = tostring(plate),
     }
 
     -- set it so we can perform quick checks to see the owner
     local plate, currentOwner = plate, true
     player.set(plate, currentOwner)
 
+end)
+
+AddEventHandler('ox:playerLogout', function(source, userid, charid)
+    local player = players[source]
+    local plate = vehicles[charid]['plate']
+    local vehicle = vehicles[charid]['vehicle']
+
+    player.set(plate, false)
+    deleteVehicle(vehicle)
 end)
