@@ -123,6 +123,7 @@ lib.callback.register('ox_police:spawnVehicle', function(source, model, mock)
 
 end)
 
+-- delete the vehicle from the list of vehicles, including player identifier and vehicle plate, and destroy the vehicle
 AddEventHandler('ox:playerLogout', function(source, userid, charid)
     local player = players[source]
     local plate = vehicles[charid]['plate']
