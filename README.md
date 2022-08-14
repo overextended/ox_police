@@ -7,7 +7,6 @@ This should serve as an example for creating jobs, and you're encouraged to make
 
 ### Notes
 - Evidence lockers and armouries are handled by ox_inventory.
-- Usage of qtarget will be limited, currently exists for testing / convenience with cuffing and escorting.
 - Boss menu and vehicle spawning should be handled through ox_lib's new menu component.
 - Markers, notifications, etc. should be built around ox_lib's zones module (spheres should usually be enough).
 

@@ -1,6 +1,10 @@
 local playerState = LocalPlayer.state
 
-local function escortPlayer(id, ped)
+local function escortPlayer(ped, id)
+    if not id then
+        id = NetworkGetPlayerIndexFromPed(ped)
+    end
+
     TriggerServerEvent('ox_police:setPlayerEscort', GetPlayerServerId(id), not IsEntityAttachedToEntity(ped, cache.ped))
 end
 
@@ -16,32 +20,33 @@ end)
 local IsPedCuffed = IsPedCuffed
 local IsEntityAttachedToEntity = IsEntityAttachedToEntity
 
-exports.qtarget:Player({
-    options = {
-        {
-            icon = "fas fa-hands-bound",
-            label = "Escort",
-            job = Config.PoliceGroups,
-            canInteract = function(entity)
-                return InService and IsPedCuffed(entity) and not IsEntityAttachedToEntity(entity, cache.ped) and not playerState.invBusy
-            end,
-            action = function(entity)
-                escortPlayer(NetworkGetPlayerIndexFromPed(entity), entity)
-            end
-        },
-        {
-            icon = "fas fa-hands-bound",
-            label = "Release",
-            job = Config.PoliceGroups,
-            canInteract = function(entity)
-                return InService and IsPedCuffed(entity) and IsEntityAttachedToEntity(entity, cache.ped) and not playerState.invBusy
-            end,
-            action = function(entity)
-                escortPlayer(NetworkGetPlayerIndexFromPed(entity), entity)
-            end
-        },
+exports.ox_target:addGlobalPlayer({
+    {
+        name = 'escort',
+        icon = "fas fa-hands-bound",
+        label = "Escort",
+        job = Config.PoliceGroups,
+        distance = 1.5,
+        canInteract = function(entity)
+            return InService and IsPedCuffed(entity) and not IsEntityAttachedToEntity(entity, cache.ped) and not playerState.invBusy
+        end,
+        onSelect = function(data)
+            escortPlayer(data.entity)
+        end
     },
-    distance = 2.0
+    {
+        name = 'release',
+        icon = "fas fa-hands-bound",
+        label = "Release",
+        job = Config.PoliceGroups,
+        distance = 1.5,
+        canInteract = function(entity)
+            return InService and IsPedCuffed(entity) and IsEntityAttachedToEntity(entity, cache.ped) and not playerState.invBusy
+        end,
+        onSelect = function(data)
+            escortPlayer(data.entity)
+        end
+    },
 })
 
 local isEscorted = playerState.isEscorted

@@ -40,32 +40,33 @@ RegisterCommand('cuff', function()
     cuffPlayer(ped)
 end)
 
-exports.qtarget:Player({
-    options = {
-        {
-            icon = "fas fa-handcuffs",
-            label = "Handcuff",
-            job = Config.PoliceGroups,
-            canInteract = function(entity)
-                return InService and not IsPedCuffed(entity) and not playerState.invBusy
-            end,
-            action = function(entity)
-                cuffPlayer(entity)
-            end
-        },
-        {
-            icon = "fas fa-handcuffs",
-            label = "Remove handcuffs",
-            job = Config.PoliceGroups,
-            canInteract = function(entity)
-                return InService and IsPedCuffed(entity) and not IsEntityAttached(entity) and not playerState.invBusy
-            end,
-            action = function(entity)
-                cuffPlayer(entity)
-            end
-        },
+exports.ox_target:addGlobalPlayer({
+    {
+        name = 'cuff',
+        icon = 'fas fa-handcuffs',
+        label = 'Handcuff',
+        groups = Config.PoliceGroups,
+        distance = 1.5,
+        canInteract = function(entity)
+            return InService and not IsPedCuffed(entity) and not playerState.invBusy
+        end,
+        onSelect = function(data)
+            cuffPlayer(data.entity)
+        end
     },
-    distance = 2.0
+    {
+        name = 'uncuff',
+        icon = 'fas fa-handcuffs',
+        label = 'Remove handcuffs',
+        groups = Config.PoliceGroups,
+        distance = 1.5,
+        canInteract = function(entity)
+            return InService and IsPedCuffed(entity) and not IsEntityAttached(entity) and not playerState.invBusy
+        end,
+        onSelect = function(data)
+            cuffPlayer(data.entity)
+        end
+    },
 })
 
 local isCuffed = playerState.isCuffed
