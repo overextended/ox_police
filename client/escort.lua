@@ -51,15 +51,12 @@ exports.ox_target:addGlobalPlayer({
 
 local isEscorted = playerState.isEscorted
 
-local function whileEscorted(serverId)
+local function setEscorted(serverId)
     while isEscorted do
         local player = GetPlayerFromServerId(serverId)
         local ped = player > 0 and GetPlayerPed(player)
 
-        if not ped then
-            playerState.isEscorted = false
-            return
-        end
+        if not ped then break end
 
         if not IsEntityAttachedToEntity(cache.ped, ped) then
             AttachEntityToEntity(cache.ped, ped, 11816, 0.54, 0.54, 0.0, 0.0, 0.0, 0.0, false, false, true, true, 2, true)
@@ -67,20 +64,23 @@ local function whileEscorted(serverId)
 
         Wait(500)
     end
+
+    Wait(0)
+    playerState:set('isEscorted', false, true)
 end
 
 AddStateBagChangeHandler('isEscorted', ('player:%s'):format(cache.serverId), function(_, _, value)
+    isEscorted = value
+
     if IsEntityAttached(cache.ped) then
         DetachEntity(cache.ped, true, false)
     end
 
-    if value and not isEscorted then
-        CreateThread(function()
-            whileEscorted(value)
-        end)
-    end
-
-    isEscorted = value
+    if value then setEscorted(value) end
 end)
 
-playerState.isEscorted = isEscorted
+if isEscorted then
+    CreateThread(function()
+        setEscorted(isEscorted)
+    end)
+end
