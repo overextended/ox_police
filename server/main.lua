@@ -1,19 +1,22 @@
 local players = {}
+local table = lib.table
 
-for _, v in pairs(Ox.GetPlayers(true, { inService = 'police' })) do
-    players[v.source] = v
+for _, player in pairs(Ox.GetPlayers(true, { groups = Config.PoliceGroups })) do
+    if table.contains(Config.PoliceGroups, player.get('inService')) then
+        players[player.source] = player
+    end
 end
 
-RegisterNetEvent('ox_police:setPlayerInService', function(state)
+RegisterNetEvent('ox:setPlayerInService', function(group)
     local player = Ox.GetPlayer(source)
 
-    if player.hasGroup(Config.PoliceGroups) then
-        player.set('inService', state and 'police' or false)
-
-        if state then
+    if player then
+        if group and table.contains(Config.PoliceGroups, group) and player.hasGroup(Config.PoliceGroups) then
             players[source] = player
-            return
+            return player.set('inService', group, true)
         end
+
+        player.set('inService', false, true)
     end
 
     players[source] = nil
@@ -30,17 +33,14 @@ end)
 lib.callback.register('ox_police:setPlayerCuffs', function(source, target)
     local player = players[source]
 
-    if not player then
-        return print('player is not in service')
-    end
+    if not player then return end
 
     target = Player(target)?.state
 
-    if not target then
-        return print('invalid target')
-    end
+    if not target then return end
 
     local state = not target.isCuffed
+
     target:set('isCuffed', state, true)
 
     return state
@@ -49,15 +49,11 @@ end)
 RegisterNetEvent('ox_police:setPlayerEscort', function(target, state)
     local player = players[source]
 
-    if not player then
-        return print('player is not in service')
-    end
+    if not player then return end
 
     target = Player(target)?.state
 
-    if not target then
-        return print('invalid target')
-    end
+    if not target then return end
 
     target:set('isEscorted', state and source, true)
 end)

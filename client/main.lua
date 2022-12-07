@@ -1,21 +1,13 @@
-InService = false
-
-if player then
-    lib.callback('ox_police:isPlayerInService', nil, function(state)
-        InService = state
-    end)
-end
+local table = lib.table
+InService = player?.inService and table.contains(Config.PoliceGroups, player.inService) and player.hasGroup(Config.PoliceGroups)
 
 RegisterCommand('duty', function()
-    if player.hasGroup(Config.PoliceGroups) then
-        InService = not InService
-        TriggerServerEvent('ox_police:setPlayerInService', InService)
-    end
+    InService = not InService and player.hasGroup(Config.PoliceGroups) or false
+    TriggerServerEvent('ox:setPlayerInService', InService)
 end)
 
-local playerState = LocalPlayer.state
-
 AddEventHandler('ox:playerLogout', function()
-    playerState:set('isCuffed', false, true)
-    playerState:set('isEscorted', false, true)
+    InService = false
+    LocalPlayer.state:set('isCuffed', false, true)
+    LocalPlayer.state:set('isEscorted', false, true)
 end)
