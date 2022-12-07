@@ -12,7 +12,8 @@ RegisterCommand('escort', function()
     if not InService or playerState.invBusy then return end
 
     local id, ped = lib.getClosestPlayer(player.getCoords(true))
-    if not id or not IsPedCuffed(ped) then return end
+
+    if not ped or not IsPedCuffed(ped) then return end
 
     escortPlayer(id, ped)
 end)
@@ -50,8 +51,18 @@ exports.ox_target:addGlobalPlayer({
 })
 
 local isEscorted = playerState.isEscorted
+local AttachEntityToEntity = AttachEntityToEntity
+local IsPedWalking = IsPedWalking
+local IsEntityPlayingAnim = IsEntityPlayingAnim
+local IsPedRunning = IsPedRunning
+local IsPedSprinting = IsPedSprinting
+local TaskPlayAnim = TaskPlayAnim
+local StopAnimTask = StopAnimTask
 
 local function setEscorted(serverId)
+    local dict = 'anim@move_m@prisoner_cuffed'
+    local dict2 = 'anim@move_m@trash'
+
     while isEscorted do
         local player = GetPlayerFromServerId(serverId)
         local ped = player > 0 and GetPlayerPed(player)
@@ -62,10 +73,26 @@ local function setEscorted(serverId)
             AttachEntityToEntity(cache.ped, ped, 11816, 0.54, 0.54, 0.0, 0.0, 0.0, 0.0, false, false, true, true, 2, true)
         end
 
-        Wait(500)
+        if IsPedWalking(ped) then
+            if not IsEntityPlayingAnim(cache.ped, dict, 'walk', 3) then
+                lib.requestAnimDict(dict)
+                TaskPlayAnim(cache.ped, dict, 'walk', 8.0, -8, -1, 1, 0.0, false, false, false)
+            end
+        elseif IsPedRunning(ped) or IsPedSprinting(ped) then
+            if not IsEntityPlayingAnim(cache.ped, dict2, 'run', 3) then
+                lib.requestAnimDict(dict2)
+                TaskPlayAnim(cache.ped, dict2, 'run', 8.0, -8, -1, 1, 0.0, false, false, false)
+            end
+        else
+            StopAnimTask(cache.ped, dict, 'walk', -8.0)
+            StopAnimTask(cache.ped, dict2, 'run', -8.0)
+        end
+
+        Wait(0)
     end
 
-    Wait(0)
+    RemoveAnimDict(dict)
+    RemoveAnimDict(dict2)
     playerState:set('isEscorted', false, true)
 end
 
