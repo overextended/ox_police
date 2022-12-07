@@ -5,26 +5,31 @@ local TaskPlayAnim = TaskPlayAnim
 local function cuffPlayer(ped)
     local playerId = GetPlayerServerId(NetworkGetPlayerIndexFromPed(ped))
     local state = lib.callback.await('ox_police:setPlayerCuffs', 200, playerId)
+
     if state == nil then return end
 
     playerState.invBusy = true
+
     FreezeEntityPosition(cache.ped, true)
     SetCurrentPedWeapon(cache.ped, `WEAPON_UNARMED`, true)
-    AttachEntityToEntity(cache.ped, ped, 11816, -0.07, -0.58, 0.0, 0.0, 0.0, 0.0, false, false
-        , false, true, 2, true)
+    AttachEntityToEntity(cache.ped, ped, 11816, -0.07, -0.58, 0.0, 0.0, 0.0, 0.0, false, false , false, true, 2, true)
+
+    local dict = state and 'mp_arrest_paired' or 'mp_arresting'
 
     if state then
-        lib.requestAnimDict('mp_arrest_paired')
-        TaskPlayAnim(cache.ped, 'mp_arrest_paired', 'cop_p2_back_right', 8.0, -8.0, 3750, 2, 0.0, false, false, false)
+        lib.requestAnimDict(dict)
+        TaskPlayAnim(cache.ped, dict, 'cop_p2_back_right', 8.0, -8.0, 3750, 2, 0.0, false, false, false)
         Wait(3750)
     else
-        lib.requestAnimDict('mp_arresting')
-        TaskPlayAnim(cache.ped, 'mp_arresting', 'a_uncuff', 8.0, -8, 5500, 0, 0, false, false, false)
+        lib.requestAnimDict(dict)
+        TaskPlayAnim(cache.ped, dict, 'a_uncuff', 8.0, -8, 5500, 0, 0, false, false, false)
         Wait(5500)
     end
 
     DetachEntity(cache.ped, true, false)
     FreezeEntityPosition(cache.ped, false)
+    RemoveAnimDict(dict)
+
     playerState.invBusy = false
 end
 
@@ -75,11 +80,12 @@ local DisablePlayerFiring = DisablePlayerFiring
 local DisableControlAction = DisableControlAction
 
 local function whileCuffed()
-    lib.requestAnimDict('mp_arresting')
+    local dict = 'mp_arresting'
 
     while isCuffed do
-        if not IsEntityPlayingAnim(cache.ped, 'mp_arresting', 'idle', 3) then
-            TaskPlayAnim(cache.ped, 'mp_arresting', 'idle', 8.0, -8, -1, 49, 0.0, false, false, false)
+        if not IsEntityPlayingAnim(cache.ped, dict, 'idle', 3) then
+            lib.requestAnimDict(dict)
+            TaskPlayAnim(cache.ped, dict, 'idle', 8.0, -8, -1, 49, 0.0, false, false, false)
         end
 
         DisablePlayerFiring(cache.playerId, true)
@@ -88,6 +94,7 @@ local function whileCuffed()
     end
 
     ClearPedTasks(cache.ped)
+    RemoveAnimDict(dict)
 end
 
 AddStateBagChangeHandler('isCuffed', ('player:%s'):format(cache.serverId), function(_, _, value)
@@ -107,6 +114,7 @@ AddStateBagChangeHandler('isCuffed', ('player:%s'):format(cache.serverId), funct
                 lib.requestAnimDict('mp_arrest_paired')
                 TaskPlayAnim(ped, 'mp_arrest_paired', 'crook_p2_back_right', 8.0, -8, 3750, 2, 0, false, false, false)
                 Wait(3750)
+                RemoveAnimDict('mp_arrest_paired')
             else
                 lib.requestAnimDict('mp_arresting')
                 TaskPlayAnim(ped, 'mp_arresting', 'b_uncuff', 8.0, -8, 5500, 0, 0, false, false, false)
