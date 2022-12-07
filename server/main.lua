@@ -1,11 +1,15 @@
 local players = {}
 local table = lib.table
 
-for _, player in pairs(Ox.GetPlayers(true, { groups = Config.PoliceGroups })) do
-    if table.contains(Config.PoliceGroups, player.get('inService')) then
-        players[player.source] = player
+CreateThread(function()
+    for _, player in pairs(Ox.GetPlayers(true, { groups = Config.PoliceGroups })) do
+        local inService = player.get('inService')
+
+        if inService and table.contains(Config.PoliceGroups, inService) then
+            players[player.source] = player
+        end
     end
-end
+end)
 
 RegisterNetEvent('ox:setPlayerInService', function(group)
     local player = Ox.GetPlayer(source)
