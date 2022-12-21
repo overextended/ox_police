@@ -18,3 +18,9 @@ client_scripts {
     'client/cuff.lua',
     'client/escort.lua',
 }
+
+files {
+    'data/**.lua'
+}
+
+ox_property_data '/data/mission_row_police_station.lua'
