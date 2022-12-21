@@ -61,3 +61,12 @@ RegisterNetEvent('ox_police:setPlayerEscort', function(target, state)
 
     target:set('isEscorted', state and source, true)
 end)
+
+RegisterCommand('spikes', function(source)
+    local src = source
+    TriggerClientEvent("spawnSpikes", src)
+end)
+
+RegisterServerEvent("deleteSpikes", function(netid)
+    TriggerClientEvent("delSpikes", source, netid)
+end)

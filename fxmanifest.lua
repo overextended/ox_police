@@ -17,6 +17,7 @@ client_scripts {
     'client/main.lua',
     'client/cuff.lua',
     'client/escort.lua',
+    'client/spikes.lua',
 }
 
 files {
