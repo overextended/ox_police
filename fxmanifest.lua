@@ -21,6 +21,7 @@ client_scripts {
     'client/jail.lua',
     'client/fines.lua',
     'client/gsr.lua',
+    'client/evidence.lua',
     'client/alpr.lua',
 }
 

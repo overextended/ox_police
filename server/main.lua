@@ -182,3 +182,13 @@ RegisterNetEvent('gsrTest', function(target)
         TriggerClientEvent('ox_lib:notify', src, {type = 'error', description = 'Test comes back NEGATIVE (Has Not Shot)'})
 	end
 end)
+
+RegisterNetEvent('ox_inventory:updateWeapon', function(action)
+    if action ~= 'ammo' then return end
+    local lastShot = GetGameTimer()
+    Player(source).state:set('shot', true, true)
+    Player(source).state:set('lastShot', lastShot, true)
+    local playerId = Ox.GetPlayer(source)
+    local coords = GetEntityCoords(playerId.ped)
+    TriggerClientEvent('casingDrop',source, coords)
+end)
