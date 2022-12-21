@@ -71,6 +71,69 @@ RegisterServerEvent("deleteSpikes", function(netid)
     TriggerClientEvent("delSpikes", source, netid)
 end)
 
+AddEventHandler('ox:playerLoaded', function(source, userid, charid)
+    local playerId = Ox.GetPlayer(source)
+	MySQL.query('SELECT sentence FROM characters WHERE charid = @charid', {
+		['@charid'] = charid,
+	}, function (result)
+		local remaining = result[1].sentence
+        Player(source).state:set('sentence', remaining, true)
+        TriggerEvent('server:beginSentence', playerId.source , remaining, true )
+	end)
+
+end)
+
+---@param id string
+---@param sentence string
+---@param resume boolean
+RegisterServerEvent('server:beginSentence',function(id, sentence, resume)
+    if sentence == 0 then return end
+    local playerId = Ox.GetPlayer(id)
+
+	MySQL.update.await('UPDATE characters SET sentence = @sentence WHERE charid = @charid', {
+		['@sentence'] = sentence,
+		['@charid']   = playerId.charid,
+	}, function(rowsChanged)
+	end)
+
+    TriggerClientEvent('ox_lib:notify', id, {
+        title = 'Jailed',
+        description = 'You have been sentenced to ' .. sentence .. ' minutes.',
+        type = 'inform'
+    })
+    if not resume then
+        exports.ox_inventory:ConfiscateInventory(id)
+    end
+
+	TriggerClientEvent('sendToJail', id, sentence)
+end)
+
+---@param target string
+---@param sentence string
+RegisterServerEvent('updateSentence',function(sentence, target)
+    local playerId = Ox.GetPlayer(target)
+
+	MySQL.update.await('UPDATE characters SET sentence = @sentence WHERE charid = @charid', {
+		['@sentence'] = sentence,
+		['@charid']   = playerId.charid,
+	}, function(rowsChanged)
+        Player(source).state:set('sentence', sentence, true)
+	end)
+
+	if sentence <= 0 then
+		if target ~= nil then
+            SetEntityCoords(target, Config.unJailCoords.x, Config.unJailCoords.y, Config.unJailCoords.z)
+            SetEntityHeading( target, Config.unJailHeading)
+            exports.ox_inventory:ReturnInventory(target)
+            TriggerClientEvent('ox_lib:notify', target, {
+                title = 'Jail',
+                description = 'Your sentence has ended.',
+                type = 'inform'
+            })
+		end
+	end
+end)
+end)
 
 RegisterNetEvent('gsrTest', function(target)
 	local src = source

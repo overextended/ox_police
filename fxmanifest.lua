@@ -18,6 +18,7 @@ client_scripts {
     'client/cuff.lua',
     'client/escort.lua',
     'client/spikes.lua',
+    'client/jail.lua',
     'client/gsr.lua',
 }
 
