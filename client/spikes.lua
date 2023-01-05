@@ -1,10 +1,7 @@
-local SpawnedSpikes = {}
-local spikemodel = "P_ld_stinger_s"
-local nearSpikes = false
-local Spawned
+local spawnedSpikes = {}
+local spikeModel = "P_ld_stinger_s"
 local stopthread = false
 local ped = cache.ped
-local Wait = Wait
 local tires = {
     {bone = "wheel_lf", index = 0},
     {bone = "wheel_rf", index = 1},
@@ -18,7 +15,7 @@ local function carcheck()
     while inVehicle do
         local vehicle = cache.vehicle
         local vehiclePos = GetEntityCoords(vehicle, false)
-        local spikes = GetClosestObjectOfType(vehiclePos.x, vehiclePos.y, vehiclePos.z, 80.0, joaat(spikemodel), 1, 1, 1)
+        local spikes = GetClosestObjectOfType(vehiclePos.x, vehiclePos.y, vehiclePos.z, 80.0, joaat(spikeModel), 1, 1, 1)
         local spikeCoords = GetEntityCoords(spikes, false)
         local coords = #(vehiclePos - spikeCoords)
         while DoesEntityExist(spikes) and coords < 5 do
@@ -38,13 +35,13 @@ local function carcheck()
 end
 
 local function removeSpikes()
-    for a = 1, #SpawnedSpikes do
-        TriggerServerEvent("deleteSpikes", SpawnedSpikes[a])
+    for a = 1, #spawnedSpikes do
+        TriggerServerEvent("deleteSpikes", spawnedSpikes[a])
     end
 end
 
 local function deleteThread(spike)
-    exports.ox_target:addModel(spikemodel,{
+    exports.ox_target:addModel(spikeModel,{
         {
           icon = 'fa-solid fa-lock',
           label = "Pick up spike strip",
@@ -67,7 +64,7 @@ local function deleteThread(spike)
                 Spawned = false
                 exports.ox_target:removeModel(spike)
             end
-            SpawnedSpikes = {}
+            spawnedSpikes = {}
           end
       },
   })
@@ -76,13 +73,13 @@ end
 local function rollSpikes()
     local spawnCoords = GetOffsetFromEntityInWorldCoords(ped, 0.0, 2.0, 0.0)
     for a = 1, 2 do
-        local spike = CreateObject(joaat(spikemodel), spawnCoords.x, spawnCoords.y, spawnCoords.z, 1, 1, 1)
+        local spike = CreateObject(joaat(spikeModel), spawnCoords.x, spawnCoords.y, spawnCoords.z, 1, 1, 1)
         local netid = NetworkGetNetworkIdFromEntity(spike)
         SetNetworkIdCanMigrate(netid, false)
         SetEntityHeading(spike, GetEntityHeading(ped))
         PlaceObjectOnGroundProperly(spike)
         spawnCoords = GetOffsetFromEntityInWorldCoords(spike, 0.0, 4.0, 0.0)
-        table.insert(SpawnedSpikes, netid)
+        table.insert(spawnedSpikes, netid)
     end
     Spawned = true
     deleteThread(spike)
