@@ -183,12 +183,12 @@ RegisterNetEvent('gsrTest', function(target)
 	end
 end)
 
-RegisterNetEvent('ox_inventory:updateWeapon', function(action)
-    if action ~= 'ammo' then return end
-    local lastShot = GetGameTimer()
-    Player(source).state:set('shot', true, true)
-    Player(source).state:set('lastShot', lastShot, true)
-    local playerId = Ox.GetPlayer(source)
-    local coords = GetEntityCoords(playerId.ped)
-    TriggerClientEvent('casingDrop',source, coords)
+RegisterServerEvent('ox_police:collectEvidence', function(items)
+    for item, data in pairs(items) do
+        for type, count in pairs(data) do
+            exports.ox_inventory:AddItem(source, item, count, type)
+        end
+    end
+
+    lib.notify(source, {type = 'success', title = 'Evidence collected'})
 end)
