@@ -15,13 +15,12 @@ local function cuffPlayer(ped)
     AttachEntityToEntity(cache.ped, ped, 11816, -0.07, -0.58, 0.0, 0.0, 0.0, 0.0, false, false , false, true, 2, true)
 
     local dict = state and 'mp_arrest_paired' or 'mp_arresting'
+    lib.requestAnimDict(dict)
 
     if state then
-        lib.requestAnimDict(dict)
         TaskPlayAnim(cache.ped, dict, 'cop_p2_back_right', 8.0, -8.0, 3750, 2, 0.0, false, false, false)
         Wait(3750)
     else
-        lib.requestAnimDict(dict)
         TaskPlayAnim(cache.ped, dict, 'a_uncuff', 8.0, -8, 5500, 0, 0, false, false, false)
         Wait(5500)
     end
@@ -34,26 +33,26 @@ local function cuffPlayer(ped)
 end
 
 local IsPedCuffed = IsPedCuffed
-local IsEntityAttached = IsEntityAttached
+local IsPedFatallyInjured = IsPedFatallyInjured
+local IsEntityPlayingAnim = IsEntityPlayingAnim
 
-RegisterCommand('cuff', function()
-    if not InService or playerState.invBusy then return end
-
-    local id, ped = lib.getClosestPlayer(player.getCoords(true))
-    if not id then return end
-
-    cuffPlayer(ped)
-end)
+local function canCuffPed(ped)
+	return IsPedFatallyInjured(ped)
+	or IsEntityPlayingAnim(ped, 'dead', 'dead_a', 3)
+    or IsEntityPlayingAnim(ped, 'missminuteman_1ig_2', 'handsup_base', 3)
+	or IsEntityPlayingAnim(ped, 'missminuteman_1ig_2', 'handsup_enter', 3)
+	or IsEntityPlayingAnim(ped, 'random@mugging3', 'handsup_standing_base', 3)
+end
 
 exports.ox_target:addGlobalPlayer({
     {
         name = 'cuff',
         icon = 'fas fa-handcuffs',
         label = 'Handcuff',
-        groups = Config.PoliceGroups,
         distance = 1.5,
+        items = 'handcuffs',
         canInteract = function(entity)
-            return InService and not IsPedCuffed(entity) and not playerState.invBusy
+            return canCuffPed(entity) and not IsPedCuffed(entity) and not playerState.invBusy
         end,
         onSelect = function(data)
             cuffPlayer(data.entity)
@@ -63,10 +62,10 @@ exports.ox_target:addGlobalPlayer({
         name = 'uncuff',
         icon = 'fas fa-handcuffs',
         label = 'Remove handcuffs',
-        groups = Config.PoliceGroups,
         distance = 1.5,
+        items = 'handcuffkey',
         canInteract = function(entity)
-            return InService and IsPedCuffed(entity) and not IsEntityAttached(entity) and not playerState.invBusy
+            return IsPedCuffed(entity) and not playerState.invBusy
         end,
         onSelect = function(data)
             cuffPlayer(data.entity)
@@ -75,7 +74,6 @@ exports.ox_target:addGlobalPlayer({
 })
 
 local isCuffed = playerState.isCuffed
-local IsEntityPlayingAnim = IsEntityPlayingAnim
 local DisablePlayerFiring = DisablePlayerFiring
 local DisableControlAction = DisableControlAction
 
@@ -131,7 +129,7 @@ AddStateBagChangeHandler('isCuffed', ('player:%s'):format(cache.serverId), funct
     isCuffed = value
 
     if value then
-        CreateThread(whileCuffed)
+        whileCuffed()
     end
 end)
 
