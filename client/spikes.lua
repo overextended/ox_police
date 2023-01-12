@@ -1,124 +1,175 @@
-local spawnedSpikes = {}
-local spikeModel = "P_ld_stinger_s"
-local stopthread = false
-local ped = cache.ped
-local tires = {
-    {bone = "wheel_lf", index = 0},
-    {bone = "wheel_rf", index = 1},
-    {bone = "wheel_rr", index = 2},
-    {bone = "wheel_rm", index = 3},
-    {bone = "wheel_lr", index = 4},
-    {bone = "wheel_lm", index = 5}
-}
-
-local function carcheck()
-    while inVehicle do
-        local vehicle = cache.vehicle
-        local vehiclePos = GetEntityCoords(vehicle, false)
-        local spikes = GetClosestObjectOfType(vehiclePos.x, vehiclePos.y, vehiclePos.z, 80.0, joaat(spikeModel), 1, 1, 1)
-        local spikeCoords = GetEntityCoords(spikes, false)
-        local coords = #(vehiclePos - spikeCoords)
-        while DoesEntityExist(spikes) and coords < 5 do
-            Wait(5)
-            for a = 1, #tires do
-                local tireCoords = GetWorldPositionOfEntityBone(vehicle, GetEntityBoneIndexByName(vehicle, tires[a].bone))
-                local dist = #(tireCoords - spikeCoords)
-                if dist < 1.8 then
-                    if not IsVehicleTyreBurst(vehicle, tires[a].index, true) or IsVehicleTyreBurst(vehicle, tires[a].index, false) then
-                        SetVehicleTyreBurst(vehicle, tires[a].index, false, 1000.0)
-                    end
-                end
-            end
-        end
-        Wait(100)
-    end
-end
-
-local function removeSpikes()
-    for a = 1, #spawnedSpikes do
-        TriggerServerEvent("deleteSpikes", spawnedSpikes[a])
-    end
-end
-
-local function deleteThread(spike)
-    exports.ox_target:addModel(spikeModel,{
-        {
-          icon = 'fa-solid fa-lock',
-          label = "Pick up spike strip",
-          onSelect = function(data)
+exports.ox_target:addModel('p_ld_stinger_s', {
+    {
+        icon = 'fa-solid fa-lock',
+        label = 'Pick up spike strip',
+        onSelect = function(data)
             if lib.progressBar({
                 duration = 1500,
-                label = 'Picking up spikestrips',
+                label = 'Picking up spike strips',
                 useWhileDead = false,
-                canCancel = false,
+                canCancel = true,
                 disable = {
-                    car = false,
-                    move = false,
+                    car = true,
+                    move = true,
                 },
                 anim = {
                     dict = 'amb@prop_human_bum_bin@idle_b',
                     clip = 'idle_d'
                 },
             }) then
-                removeSpikes()
-                Spawned = false
-                exports.ox_target:removeModel(spike)
+                TriggerServerEvent('ox_police:retrieveSpikestrip', ObjToNet(data.entity))
             end
-            spawnedSpikes = {}
-          end
-      },
-  })
-end
+        end
+    },
+})
 
-local function rollSpikes()
-    local spawnCoords = GetOffsetFromEntityInWorldCoords(ped, 0.0, 2.0, 0.0)
-    for a = 1, 2 do
-        local spike = CreateObject(joaat(spikeModel), spawnCoords.x, spawnCoords.y, spawnCoords.z, 1, 1, 1)
-        local netid = NetworkGetNetworkIdFromEntity(spike)
-        SetNetworkIdCanMigrate(netid, false)
-        SetEntityHeading(spike, GetEntityHeading(ped))
-        PlaceObjectOnGroundProperly(spike)
-        spawnCoords = GetOffsetFromEntityInWorldCoords(spike, 0.0, 4.0, 0.0)
-        table.insert(spawnedSpikes, netid)
+local glm = require 'glm'
+
+exports('deploySpikestrip', function()
+    if cache.vehicle then
+        lib.notify({title = 'Cannot deploy a spikestrip while in a vehicle', type = 'error'})
+        return
     end
-    Spawned = true
-    deleteThread(spike)
-end
 
-RegisterNetEvent("delSpikes")
-AddEventHandler("delSpikes", function(netid)
-    local spike = NetworkGetEntityFromNetworkId(netid)
-    DeleteEntity(spike)
-    DeleteEntity(spike)
-end)
+    local count = exports.ox_inventory:Search('count', 'spikestrip')
+    local options = {}
 
-RegisterNetEvent("spawnSpikes")
-AddEventHandler("spawnSpikes", function()
+    if count < 1 then return end
+
+    for i = 1, count do
+        options[i] = {
+            value = tostring(i),
+            label = tostring(i)
+        }
+
+        if i == 4 then break end
+    end
+
+    local size = lib.inputDialog('Deploy Spikestrip', {
+        { type = 'select', label = 'Size', options = options }
+    })
+
+    if not size then return end
+
+    size = tonumber(size[1])
+
     if lib.progressBar({
-        duration = 5000,
-        label = 'Placing spike strips',
+        duration = 1000 * size,
+        label = 'Placing Spikestrip',
         useWhileDead = false,
-        canCancel = false,
+        canCancel = true,
         disable = {
-            car = false,
+            car = true,
+            combat = true,
         },
         anim = {
             dict = 'amb@prop_human_bum_bin@idle_b',
             clip = 'idle_d'
         },
     }) then
-        rollSpikes()
+        local segment = {
+            GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 1.0, 0.0),
+            GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 4.15 * size - 1, 0.0)
+        }
+        local length = glm.snap(#(segment[1] - segment[2]), 0.01)
+
+        for i = 1, 2 do
+            while true do
+                local retrieval, groundZ = GetGroundZFor_3dCoord_2(segment[i].x, segment[i].y, segment[i].z, false, true)
+                segment[i] = vec3(segment[i].x, segment[i].y, retrieval and groundZ or segment[i].z + 1)
+
+                if retrieval then
+                    break
+                end
+            end
+        end
+
+        segment[2] = segment[1] - glm.clampLength(segment[1] - segment[2], length)
+
+        TriggerServerEvent('ox_police:deploySpikestrip', {
+            segment = segment,
+            size = size
+        })
     end
 end)
 
-lib.onCache('vehicle', function(value)
+local wheelBones = {
+    standard = {
+        [0] = 'wheel_lf',
+        'wheel_rf',
+        'wheel_lm1',
+        'wheel_rm1',
+        'wheel_lr',
+        'wheel_rr',
+        [547] = 'wheel_lm2',
+        [549] = 'wheel_rm2',
+    },
+    halftrack = {
+        [0] = 'wheel_lf',
+        'wheel_rf',
+    },
+}
+
+local flags = tonumber('11111000100001111111', 2)
+local GetEntityModel = GetEntityModel
+local GetClosestVehicle = GetClosestVehicle
+local GetEntityCoords = GetEntityCoords
+local DoesEntityExist = DoesEntityExist
+local GetOffsetFromEntityInWorldCoords = GetOffsetFromEntityInWorldCoords
+local IsEntityTouchingEntity = IsEntityTouchingEntity
+local GetVehicleNumberOfWheels = GetVehicleNumberOfWheels
+local IsVehicleTyreBurst = IsVehicleTyreBurst
+local GetEntityBonePosition_2 = GetEntityBonePosition_2
+local GetEntityBoneIndexByName = GetEntityBoneIndexByName
+local SetVehicleTyreBurst = SetVehicleTyreBurst
+
+AddStateBagChangeHandler('inScope', '', function(bagName, key, value, reserved, replicated)
     if value then
-        -- if Spawned == true then
-            inVehicle = true
-            CreateThread(carcheck)
-        -- end
-    else
-        inVehicle = false
+        local entity = GetEntityFromStateBagName(bagName)
+
+        if GetEntityModel(entity) ~= `p_ld_stinger_s` then
+            return
+        end
+
+        local coords = GetEntityCoords(entity)
+        local segment
+
+        while DoesEntityExist(entity) do
+            local sleep = 500
+            local vehicle = GetClosestVehicle(coords.x, coords.y, coords.z, 10.0, nil, flags)
+
+            if vehicle ~= 0 then
+                sleep = 0
+                local model = GetEntityModel(vehicle)
+
+                if model ~= `monster4` and (GetVehicleNumberOfWheels(vehicle) < 10 or model == `halftrack`) then
+                    local newCoords = GetEntityCoords(entity)
+
+                    if coords ~= newCoords or not segment then
+                        coords = newCoords
+                        segment = {
+                            GetOffsetFromEntityInWorldCoords(entity, 0.0, -1.84, 0.0),
+                            GetOffsetFromEntityInWorldCoords(entity, 0.0, 1.84, 0.0)
+                        }
+                    end
+
+                    if IsEntityTouchingEntity(entity, vehicle) then
+                        local bones = model == `halftrack` and wheelBones.halftrack or wheelBones.standard
+
+                        for k, v in pairs(bones) do
+                            if not IsVehicleTyreBurst(vehicle, k, false) and glm.segment.distance(segment[1], segment[2], GetEntityBonePosition_2(vehicle, GetEntityBoneIndexByName(vehicle, v))) < 1 then
+                                if math.random(10) > 7 then
+                                    SetVehicleTyreBurst(vehicle, k, false, 500.0)
+                                end
+
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+
+            Wait(sleep)
+        end
     end
 end)
-
