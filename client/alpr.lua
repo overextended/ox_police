@@ -4,6 +4,22 @@ local GetShapeTestResult = GetShapeTestResult
 local GetEntitySpeed = GetEntitySpeed
 local playerState = LocalPlayer.state
 
+local vehicleData = setmetatable({}, {
+	__index = function(self, index)
+		local data = Ox.GetVehicleData(index)
+
+		if data then
+			data = {
+				name = data.name,
+				make = data.make,
+			}
+
+			self[index] = data
+			return data
+		end
+	end
+})
+
 local function updateTextUI()
     local coords, normal = GetWorldCoordFromScreenCoord(0.5, 0.5)
     local destination = coords + normal * 50
@@ -12,7 +28,9 @@ local function updateTextUI()
 
     if IsEntityAVehicle(entity) then
         local speed = math.floor(GetEntitySpeed(entity) * 2.23)
-        lib.showTextUI(('Speed: %s MPH  \nPlate: %s'):format(speed, GetVehicleNumberPlateText(entity)))
+        local data = vehicleData[GetEntityArchetypeName(entity)]
+
+        lib.showTextUI(('Speed: %s MPH  \nPlate: %s  \nMake: %s  \nModel: %s'):format(speed, GetVehicleNumberPlateText(entity), data.make, data.name))
     end
 end
 
