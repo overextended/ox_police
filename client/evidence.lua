@@ -1,62 +1,34 @@
-local evidence = {}
+local createdEvidence = {}
+
+CreateThread(function()
+    while true do
+        Wait(1000)
+
+        if next(createdEvidence) then
+            TriggerServerEvent('ox_police:distributeEvidence', createdEvidence)
+
+            table.wipe(createdEvidence)
+        end
+    end
+end)
+
 local equippedWeapon = {}
-
-local function removeNode(id)
-    evidence[id] = nil
-
-    exports.ox_target:removeZone(id)
-end
+local glm = require 'glm'
 
 local function createNode(item, coords)
-    local id = exports.ox_target:addSphereZone({
-        coords = coords,
-        radius = 0.5,
-        drawSprite = true,
-        options = {
-            {
-                name = 'evidence',
-                icon = 'fa-solid fa-gun',
-                label = 'Collect evidence',
-                onSelect = function(data)
-                    local nodes = {}
-                    local targetCoords = data.coords
+    coords = vec3(glm.snap(coords.x, 0.125), glm.snap(coords.y, 0.125), glm.snap(coords.z, 0.125))
 
-                    for k, v in pairs(evidence) do
-                        if #(targetCoords - v.coords) < 2 then
-                            nodes[#nodes + 1] = k
-                        end
-                    end
-
-                    local items = {}
-
-                    for i = 1, #nodes do
-                        local node = evidence[nodes[i]]
-
-                        if not items[node.item] then
-                            items[node.item] = {}
-                        end
-
-                        if items[node.item][node.type] then
-                            items[node.item][node.type] += 1
-                        else
-                            items[node.item][node.type] = 1
-                        end
-
-                        removeNode(node.id)
-                    end
-
-                    TriggerServerEvent('ox_police:collectEvidence', items)
-                end
-            }
+    local entry = {
+        [item] = {
+            [equippedWeapon.ammo] = 1
         }
-    })
-
-    evidence[id] = {
-        id = id,
-        coords = coords,
-        item = item,
-        type = equippedWeapon.ammo
     }
+
+    if createdEvidence[coords] then
+        lib.table.merge(createdEvidence[coords], entry)
+    else
+        createdEvidence[coords] = entry
+    end
 end
 
 AddEventHandler('ox_inventory:currentWeapon', function(weaponData)
@@ -87,4 +59,50 @@ AddEventHandler('ox_inventory:currentWeapon', function(weaponData)
             end
 		end
 	end
+end)
+
+local evidence = {}
+
+local function removeNode(coords)
+    if evidence[coords] then
+        exports.ox_target:removeZone(evidence[coords])
+
+        evidence[coords] = nil
+    end
+end
+
+RegisterNetEvent('ox_police:updateEvidence', function(addEvidence, clearEvidence)
+    for coords in pairs(addEvidence) do
+        if not evidence[coords] then
+            evidence[coords] = exports.ox_target:addSphereZone({
+                coords = coords,
+                radius = 0.5,
+                drawSprite = true,
+                options = {
+                    {
+                        name = 'evidence',
+                        icon = 'fa-solid fa-gun',
+                        label = 'Collect evidence',
+                        onSelect = function(data)
+                            local nodes = {}
+                            local targetCoords = data.coords
+
+                            for k in pairs(evidence) do
+                                if #(targetCoords - k) < 2 then
+                                    removeNode(k)
+                                    nodes[#nodes + 1] = k
+                                end
+                            end
+
+                            TriggerServerEvent('ox_police:collectEvidence', nodes)
+                        end
+                    }
+                }
+            })
+        end
+    end
+
+    for coords in pairs(clearEvidence) do
+        removeNode(coords)
+    end
 end)
