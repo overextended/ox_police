@@ -38,12 +38,14 @@ AddEventHandler('ox_inventory:currentWeapon', function(weaponData)
 		Wait(0)
 
         if IsPedShooting(cache.ped) then
-            local impact, slugCoords = GetPedLastWeaponImpactCoord(cache.ped)
+            local hit, entityHit, endCoords = lib.raycast.cam(tonumber('000111111', 2), 7)
 
-            if impact then
+            if hit then
+                if GetEntityType(entityHit) == 0 then
+                    createNode('slug', endCoords)
+                end
+
                 Wait(100)
-
-                createNode('slug', slugCoords)
 
                 local pedCoords = GetEntityCoords(cache.ped)
                 local direction = math.rad(math.random(360))
