@@ -16,7 +16,7 @@ local equippedWeapon = {}
 local glm = require 'glm'
 
 local function createNode(item, coords)
-    coords = vec3(glm.snap(coords.x, 0.125), glm.snap(coords.y, 0.125), glm.snap(coords.z, 0.125))
+    coords = vec3(glm.snap(coords.x, 0.0625), glm.snap(coords.y, 0.0625), glm.snap(coords.z, 0.0625))
 
     local entry = {
         [item] = {
