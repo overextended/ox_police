@@ -36,7 +36,7 @@ lib.callback.register('ox_police:isPlayerInService', function(source, target)
 end)
 
 lib.callback.register('ox_police:setPlayerCuffs', function(source, target)
-    local player = players[source]
+    local player = Ox.GetPlayer(source)
 
     if not player then return end
 
@@ -52,7 +52,7 @@ lib.callback.register('ox_police:setPlayerCuffs', function(source, target)
 end)
 
 RegisterNetEvent('ox_police:setPlayerEscort', function(target, state)
-    local player = players[source]
+    local player = Ox.GetPlayer(source)
 
     if not player then return end
 
