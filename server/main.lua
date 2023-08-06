@@ -1,5 +1,4 @@
 local players = {}
-local table = lib.table
 local glm = require 'glm'
 
 CreateThread(function()
@@ -209,7 +208,7 @@ RegisterServerEvent('ox_police:collectEvidence', function(nodes)
     for i = 1, #nodes do
         local coords = nodes[i]
 
-        lib.table.merge(items, evidence[coords])
+        table.merge(items, evidence[coords])
 
         clearEvidence[coords] = true
         evidence[coords] = nil

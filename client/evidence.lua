@@ -25,7 +25,7 @@ local function createNode(item, coords)
     }
 
     if createdEvidence[coords] then
-        lib.table.merge(createdEvidence[coords], entry)
+        table.merge(createdEvidence[coords], entry)
     else
         createdEvidence[coords] = entry
     end

@@ -1,4 +1,3 @@
-local table = lib.table
 InService = player?.inService and table.contains(Config.PoliceGroups, player.inService) and player.hasGroup(Config.PoliceGroups)
 
 RegisterCommand('duty', function()

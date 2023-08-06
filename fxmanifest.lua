@@ -29,4 +29,8 @@ files {
     'data/**.lua'
 }
 
+ox_libs {
+    'table'
+}
+
 ox_property_data '/data/mission_row_police_station.lua'
