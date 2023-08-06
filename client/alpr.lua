@@ -21,12 +21,9 @@ local vehicleData = setmetatable({}, {
 })
 
 local function updateTextUI()
-    local coords, normal = GetWorldCoordFromScreenCoord(0.5, 0.5)
-    local destination = coords + normal * 50
-    local handle = StartShapeTestCapsule(coords.x, coords.y, coords.z, destination.x, destination.y, destination.z, 2.0, 2, cache.vehicle, 7)
-    local _, _, _, _, entity = GetShapeTestResult(handle)
+    local hit, entity = lib.raycast.cam(tonumber('000111111', 2), 0, 50)
 
-    if IsEntityAVehicle(entity) then
+    if hit and IsEntityAVehicle(entity) then
         local speed = math.floor(GetEntitySpeed(entity) * 2.23)
         local data = vehicleData[GetEntityArchetypeName(entity)]
 
