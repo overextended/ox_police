@@ -12,15 +12,20 @@ CreateThread(function()
     end
 end)
 
-local equippedWeapon = {}
+local ammo
 local glm = require 'glm'
 
-local function createNode(item, coords)
-    coords = vec3(glm.snap(coords.x, 0.0625), glm.snap(coords.y, 0.0625), glm.snap(coords.z, 0.0625))
+local function createNode(item, coords, entity)
+    if entity then
+        coords = glm.snap(GetOffsetFromEntityGivenWorldCoords(entity, coords.x, coords.y, coords.z), vec3(1 / 2 ^ 4))
+        coords = vec4(coords, NetworkGetNetworkIdFromEntity(entity))
+    else
+        coords = glm.snap(coords, vec3(1 / 2 ^ 4))
+    end
 
     local entry = {
         [item] = {
-            [equippedWeapon.ammo] = 1
+            [ammo] = 1
         }
     }
 
@@ -31,66 +36,102 @@ local function createNode(item, coords)
     end
 end
 
+local activeLoop = false
+
 AddEventHandler('ox_inventory:currentWeapon', function(weaponData)
-    equippedWeapon = weaponData
+    ammo = weaponData?.ammo
 
-    while equippedWeapon?.ammo do
-		Wait(0)
+    if ammo and not activeLoop then
+        activeLoop = true
 
-        if IsPedShooting(cache.ped) then
-            local hit, entityHit, endCoords = lib.raycast.cam(tonumber('000111111', 2), 7)
+        while true do
+            Wait(0)
 
-            if hit then
-                if GetEntityType(entityHit) == 0 then
-                    createNode('slug', endCoords)
-                end
+            if IsPedShooting(cache.ped) then
+                local hit, entityHit, endCoords = lib.raycast.cam(tonumber('000111111', 2), 7)
 
-                Wait(100)
+                if hit then
+                    if GetEntityType(entityHit) == 0 then
+                        createNode('slug', endCoords)
+                    elseif NetworkGetEntityIsNetworked(entityHit) then
+                        createNode('slug', endCoords, entityHit)
+                    end
 
-                local pedCoords = GetEntityCoords(cache.ped)
-                local direction = math.rad(math.random(360))
-                local magnitude = math.random(100) / 20
+                    Wait(100)
 
-                local coords = vec3(pedCoords.x + math.sin(direction) * magnitude, pedCoords.y + math.cos(direction) * magnitude, pedCoords.z)
+                    local pedCoords = GetEntityCoords(cache.ped)
+                    local direction = math.rad(math.random(360))
+                    local magnitude = math.random(100) / 20
 
-                local success, impactZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, 1)
+                    local coords = vec3(pedCoords.x + math.sin(direction) * magnitude, pedCoords.y + math.cos(direction) * magnitude, pedCoords.z)
 
-                if success then
-                    createNode('case', vector3(coords.x, coords.y, impactZ))
+                    local success, impactZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, 1)
+
+                    if success then
+                        createNode('case', vector3(coords.xy, impactZ))
+                    end
                 end
             end
-		end
-	end
+
+            if not ammo then
+                activeLoop = false
+                break
+            end
+        end
+    end
 end)
 
 local evidence = {}
 
 local function removeNode(coords)
     if evidence[coords] then
-        exports.ox_target:removeZone(evidence[coords])
+        if coords.w then
+            exports.ox_target:removeEntity(coords.w, ('evidence_%s'):format(coords))
+        else
+            exports.ox_target:removeZone(evidence[coords])
+        end
 
         evidence[coords] = nil
     end
 end
 
+local evidenceOption
+
+CreateThread(function()
+    while true do
+        Wait(0)
+
+        evidenceOption = nil
+    end
+end)
+
 RegisterNetEvent('ox_police:updateEvidence', function(addEvidence, clearEvidence)
     for coords in pairs(addEvidence) do
         if not evidence[coords] then
-            evidence[coords] = exports.ox_target:addSphereZone({
+            local target = {
                 coords = coords,
-                radius = 0.5,
+                radius = 1 / 2 ^ 4,
                 drawSprite = true,
                 options = {
                     {
-                        name = 'evidence',
+                        name = ('evidence_%s'):format(coords),
                         icon = 'fa-solid fa-gun',
                         label = 'Collect evidence',
+                        offset = coords.w and coords.xyz,
+                        canInteract = function(entity, distance, coords, name, bone)
+                            if evidenceOption then
+                                return false
+                            else
+                                evidenceOption = true
+                                return true
+                            end
+                        end,
                         onSelect = function(data)
                             local nodes = {}
                             local targetCoords = data.coords
 
                             for k in pairs(evidence) do
-                                if #(targetCoords - k) < 2 then
+                                if #(targetCoords - (k.w and GetOffsetFromEntityInWorldCoords(NetworkGetEntityFromNetworkId(k.w), k.x, k.y, k.z) or k)) < 1 then
                                     removeNode(k)
                                     nodes[#nodes + 1] = k
                                 end
@@ -100,7 +141,14 @@ RegisterNetEvent('ox_police:updateEvidence', function(addEvidence, clearEvidence
                         end
                     }
                 }
-            })
+            }
+
+            if coords.w then
+                exports.ox_target:addEntity(coords.w, target.options)
+                evidence[coords] = coords
+            else
+                evidence[coords] = exports.ox_target:addSphereZone(target)
+            end
         end
     end
 
