@@ -36,10 +36,12 @@ local IsPedCuffed = IsPedCuffed
 local IsPedFatallyInjured = IsPedFatallyInjured
 local IsEntityPlayingAnim = IsEntityPlayingAnim
 local GetIsTaskActive = GetIsTaskActive
+local IsPedRagdoll = IsPedRagdoll
 
 local function canCuffPed(ped)
 	return IsPedFatallyInjured(ped)
     or GetIsTaskActive(ped, 0)
+    or IsPedRagdoll(ped)
 	or IsEntityPlayingAnim(ped, 'dead', 'dead_a', 3)
     or IsEntityPlayingAnim(ped, 'missminuteman_1ig_2', 'handsup_base', 3)
 	or IsEntityPlayingAnim(ped, 'missminuteman_1ig_2', 'handsup_enter', 3)
