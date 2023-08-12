@@ -1,6 +1,6 @@
 Config = {}
 
-Config.PoliceGroups = { 'police' }
+Config.PoliceGroups = json.decode(GetConvar('inventory:police', '["police", "sheriff"]'))
 
 Config.clearGSR = 15 -- time in minutes
 Config.clearGSRinWater = 1 --minutes
