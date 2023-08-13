@@ -115,8 +115,10 @@ RegisterNetEvent('ox_police:updateEvidence', function(addEvidence, clearEvidence
                 options = {
                     {
                         name = ('evidence_%s'):format(coords),
-                        icon = 'fa-solid fa-gun',
+                        icon = 'fa-solid fa-magnifying-glass',
                         label = 'Collect evidence',
+                        offsetSize = 1 / 2 ^ 3,
+                        absoluteOffset = true,
                         offset = coords.w and coords.xyz,
                         canInteract = function(entity, distance, coords, name, bone)
                             if evidenceOption then
