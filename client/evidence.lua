@@ -48,7 +48,7 @@ AddEventHandler('ox_inventory:currentWeapon', function(weaponData)
             Wait(0)
 
             if IsPedShooting(cache.ped) then
-                local hit, entityHit, endCoords = lib.raycast.cam(tonumber('000111111', 2), 7)
+                local hit, entityHit, endCoords = lib.raycast.cam(tonumber('000111111', 2), 7, 50)
 
                 if hit then
                     if GetEntityType(entityHit) == 0 then
