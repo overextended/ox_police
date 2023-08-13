@@ -65,7 +65,7 @@ AddEventHandler('ox_inventory:currentWeapon', function(weaponData)
 
                     local coords = vec3(pedCoords.x + math.sin(direction) * magnitude, pedCoords.y + math.cos(direction) * magnitude, pedCoords.z)
 
-                    local success, impactZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, 1)
+                    local success, impactZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, true)
 
                     if success then
                         createNode('case', vector3(coords.xy, impactZ))

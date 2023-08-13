@@ -80,6 +80,7 @@ exports('deploySpikestrip', function()
 
         for i = 1, 2 do
             while true do
+                ---@diagnostic disable-next-line: redundant-parameter
                 local retrieval, groundZ = GetGroundZFor_3dCoord_2(segment[i].x, segment[i].y, segment[i].z, false, true)
                 segment[i] = vec3(segment[i].x, segment[i].y, retrieval and groundZ or segment[i].z + 1)
 
@@ -141,7 +142,7 @@ AddStateBagChangeHandler('inScope', '', function(bagName, key, value, reserved, 
 
         while DoesEntityExist(entity) do
             local sleep = 500
-            local vehicle = GetClosestVehicle(coords.x, coords.y, coords.z, 10.0, nil, flags)
+            local vehicle = GetClosestVehicle(coords.x, coords.y, coords.z, 10.0, 0, flags)
 
             if vehicle ~= 0 then
                 sleep = 0
