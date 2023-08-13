@@ -11,7 +11,7 @@ CreateThread(function()
     end
 end)
 
-RegisterNetEvent('ox:setPlayerInService', function(group)
+RegisterServerEvent('ox:setPlayerInService', function(group)
     local player = Ox.GetPlayer(source)
 
     if player then
@@ -50,7 +50,7 @@ lib.callback.register('ox_police:setPlayerCuffs', function(source, target)
     return state
 end)
 
-RegisterNetEvent('ox_police:setPlayerEscort', function(target, state)
+RegisterServerEvent('ox_police:setPlayerEscort', function(target, state)
     local player = Ox.GetPlayer(source)
 
     if not player then return end
