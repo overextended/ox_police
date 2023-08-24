@@ -8,28 +8,17 @@ local function escortPlayer(ped, id)
     TriggerServerEvent('ox_police:setPlayerEscort', GetPlayerServerId(id), not IsEntityAttachedToEntity(ped, cache.ped))
 end
 
-RegisterCommand('escort', function()
-    if not InService or playerState.invBusy then return end
-
-    local id, ped = lib.getClosestPlayer(player.getCoords(true))
-
-    if not ped or not IsPedCuffed(ped) then return end
-
-    escortPlayer(id, ped)
-end)
-
 local IsPedCuffed = IsPedCuffed
 local IsEntityAttachedToEntity = IsEntityAttachedToEntity
 
 exports.ox_target:addGlobalPlayer({
     {
         name = 'escort',
-        icon = "fas fa-hands-bound",
-        label = "Escort",
-        job = Config.PoliceGroups,
+        icon = 'fas fa-hands-bound',
+        label = 'Escort',
         distance = 1.5,
         canInteract = function(entity)
-            return InService and IsPedCuffed(entity) and not IsEntityAttachedToEntity(entity, cache.ped) and not playerState.invBusy
+            return IsPedCuffed(entity) and not IsEntityAttachedToEntity(entity, cache.ped) and not playerState.invBusy
         end,
         onSelect = function(data)
             escortPlayer(data.entity)
@@ -37,12 +26,10 @@ exports.ox_target:addGlobalPlayer({
     },
     {
         name = 'release',
-        icon = "fas fa-hands-bound",
-        label = "Release",
-        job = Config.PoliceGroups,
+        label = 'Release',
         distance = 1.5,
         canInteract = function(entity)
-            return InService and IsPedCuffed(entity) and IsEntityAttachedToEntity(entity, cache.ped) and not playerState.invBusy
+            return IsPedCuffed(entity) and IsEntityAttachedToEntity(entity, cache.ped) and not playerState.invBusy
         end,
         onSelect = function(data)
             escortPlayer(data.entity)

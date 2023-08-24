@@ -1,3 +1,3 @@
 Config = {}
 
-Config.PoliceGroups = { 'police' }
+Config.PoliceGroups = json.decode(GetConvar('inventory:police', '["police", "sheriff"]'))
