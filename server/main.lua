@@ -2,7 +2,7 @@ local players = {}
 local glm = require 'glm'
 
 CreateThread(function()
-    for _, player in pairs(Ox.GetPlayers(true, { groups = Config.PoliceGroups })) do
+    for _, player in pairs(Ox.GetPlayers({ groups = Config.PoliceGroups })) do
         local inService = player.get('inService')
 
         if inService and table.contains(Config.PoliceGroups, inService) then
